@@ -9,7 +9,6 @@ contract IdenaEthRelay {
     using BytesLib for bytes;
     using SafeMath for uint256;
 
-    // TODO: explain this structure better.
     struct IDetails {
         bool valid;
         bool voted;
