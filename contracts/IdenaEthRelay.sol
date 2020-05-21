@@ -15,8 +15,6 @@ contract IdenaEthRelay {
         uint256 signatures;
     }
 
-    event Here(uint256 e, uint256 threshold, uint256 epoch, address sender);
-
     uint256 epoch;
     mapping(uint256 => uint256) identitiesCount;
     mapping(uint256 => mapping(address => IDetails)) public identities;
