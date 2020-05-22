@@ -2,12 +2,13 @@ pragma solidity ^0.6.8;
 
 import "./BytesLib.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-
+import "@openzeppelin/contracts-ethereum-package/contracts/cryptography/ECDSA.sol";
 
 contract IdenaEthRelay {
 
     using BytesLib for bytes;
     using SafeMath for uint256;
+    using ECDSA for bytes32;
 
     struct IDetails {
         bool valid;
@@ -26,16 +27,17 @@ contract IdenaEthRelay {
         }
     }
 
-    function relay(bytes memory _identities) public {
+    function relay(bytes memory _identities, bytes memory signature) public {
+        address signer = keccak256(abi.encodePacked(_identities)).toEthSignedMessageHash().recover(signature);
         uint256 e = epoch + 1;
-        while (e > 0 && !identities[e][msg.sender].valid) {
+        while (e > 0 && !identities[e][signer].valid) {
             e--;
         }
         require(
-            identities[e][msg.sender].valid && !identities[e][msg.sender].voted,
+            identities[e][signer].valid && !identities[e][signer].voted,
             "Cannot vote in any epoch."
         );
-        identities[e + 1][msg.sender].voted = true;
+        identities[e + 1][signer].voted = true;
         uint256 threshold = (identitiesCount[e].mul(2) + 1).div(3);
         address identity;
         for (uint256 i = 0; i < _identities.length; i += 20) {

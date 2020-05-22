@@ -21,12 +21,15 @@ else
     ganache_port=8545
 fi
 
+source ./.env
+
 ganache_running() {
     nc -z localhost "$ganache_port"
 }
 
 start_ganache() {
-    npx ganache-cli --gasLimit 0xfffffffffff --port "$ganache_port" > /dev/null &
+    npx ganache-cli --gasLimit 0xfffffffffff --port "$ganache_port" \
+    --mnemonic $GANACHE_MNEMONIC > /dev/null &
     ganache_pid=$!
     echo "Waiting for ganache to launch on port "$ganache_port"..."
     while ! ganache_running; do
