@@ -32,6 +32,11 @@ assert((await IdenaEthRelay.identities.call(await IdenaEthRelay.epoch(), <YOUR_A
 ...
 ```
 
+## Testing
+
+Place the contents of `.env.example` file in a new file called `.env` and fill in with the mnemonic of your ganache running instance.
+Then, `yarn test`.
+
 ## Acknowledgements
 
 This project was built with the following backbone: https://github.com/HQ20/create-react-solidity-app/tree/master/templates/smart-contracts.
