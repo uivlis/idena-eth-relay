@@ -23,7 +23,7 @@ await IdenaEthRelay.new('0xA6B55B19e4ecFcBA9652Ad3584Af687010dBa769CD2E2DA435356
 ```
 The `_identities` parameter does not have to contain checksummed addresses.
 
-To relay a change, pass to the `relay` function the new state of the Idena blockchain. If any address from your state gets more than `2/3` votes out of the total valid identities in the previous epoch, it will appear as valid in the new epoch.
+To relay a change, pass to the `relay` function the new state of the Idena blockchain and your signature produced by signing that state with your Idena address. If any address from your state gets more than `2/3` votes out of the total valid identities in the previous epoch, it will appear as valid in the new epoch.
 
 To check whether an address has lately been validated on the Idena blokchain do:
 ```
