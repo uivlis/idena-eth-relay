@@ -28,13 +28,13 @@ contract('IdenaEthRelay', (accounts) => {
     const identities0 = [2, 5, 6, 7, 8, 9];
     const identities00 = [5, 6, 7, 8, 9, 11];
 
-    const leaves0 = [5, 2, -1, 5, -1, 6, -1, 7, 7, 8, 6, 9];
-    const hashedLeaves0 = leaves0.map((leaf, i) => leaf == -1 ? "0x0" : accounts[leaf]).map(leaf => keccak256(leaf));
+    const leaves0 = [5, 2, 7, 8, 6, 9]; // 5 is the inviter of newbie 2; 7 is the inviter of newbie 8; 6 is the inviter of newbie 9.
+    const hashedLeaves0 = leaves0.map(leaf => keccak256(accounts[leaf]));
     const tree0 = new MerkleTree(hashedLeaves0, keccak256, { sort: true });
     const state0 = tree0.getHexRoot() + identities0.map((identity) => accounts[identity].slice(2)).join("");
 
-    const leaves00 = [-1, 5, -1, 6, -1, 7, -1, 8, 6, 9, 7, 11];
-    const hashedLeaves00 = leaves00.map((leaf, i) => leaf == -1 ? "0x0" : accounts[leaf]).map(leaf => keccak256(leaf));
+    const leaves00 = [6, 9, 7, 11];
+    const hashedLeaves00 = leaves00.map(leaf => keccak256(accounts[leaf]));
     const tree00 = new MerkleTree(hashedLeaves00, keccak256, { sort: true });
     const state00 = tree00.getHexRoot() + identities00.map((identity) => accounts[identity].slice(2)).join("");
     
