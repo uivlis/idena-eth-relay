@@ -42,7 +42,7 @@ contract('IdenaEthRelay', (accounts) => {
 
     /**
      * Test the validation of identitites
-     * @test {IdenaEthRelay#relay}
+     * @test {IdenaEthRelay#relayState}
      */
     it('...should relay identities succesfully', async () => {
         const message2 = "0x" + accounts.map((account, i) => identities2.includes(i) ? account.slice(2) : "").join("");
@@ -65,11 +65,11 @@ contract('IdenaEthRelay', (accounts) => {
         const addr_node9 = hdk.derivePath("m/44'/60'/0'/0/9");
         const private_key9 = addr_node9.getWallet().getPrivateKey()
 
-        await IdenaEthRelayInstance.relay(message2, web3.eth.accounts.sign(web3.utils.soliditySha3(message2), "0x" + private_key2.toString('hex')).signature, { from: accounts[2] });
-        await IdenaEthRelayInstance.relay(message5, web3.eth.accounts.sign(web3.utils.soliditySha3(message5), "0x" + private_key5.toString('hex')).signature, { from: accounts[5] });
-        await IdenaEthRelayInstance.relay(message7, web3.eth.accounts.sign(web3.utils.soliditySha3(message7), "0x" + private_key7.toString('hex')).signature, { from: accounts[7] });
-        await IdenaEthRelayInstance.relay(message8, web3.eth.accounts.sign(web3.utils.soliditySha3(message8), "0x" + private_key8.toString('hex')).signature, { from: accounts[8] });
-        await IdenaEthRelayInstance.relay(message9, web3.eth.accounts.sign(web3.utils.soliditySha3(message9), "0x" + private_key9.toString('hex')).signature, { from: accounts[9] });
+        await IdenaEthRelayInstance.relayState(message2, web3.eth.accounts.sign(web3.utils.soliditySha3(message2), "0x" + private_key2.toString('hex')).signature, { from: accounts[2] });
+        await IdenaEthRelayInstance.relayState(message5, web3.eth.accounts.sign(web3.utils.soliditySha3(message5), "0x" + private_key5.toString('hex')).signature, { from: accounts[5] });
+        await IdenaEthRelayInstance.relayState(message7, web3.eth.accounts.sign(web3.utils.soliditySha3(message7), "0x" + private_key7.toString('hex')).signature, { from: accounts[7] });
+        await IdenaEthRelayInstance.relayState(message8, web3.eth.accounts.sign(web3.utils.soliditySha3(message8), "0x" + private_key8.toString('hex')).signature, { from: accounts[8] });
+        await IdenaEthRelayInstance.relayState(message9, web3.eth.accounts.sign(web3.utils.soliditySha3(message9), "0x" + private_key9.toString('hex')).signature, { from: accounts[9] });
         for (let i in identities00) {
             ((await IdenaEthRelayInstance.identities("1", accounts[identities00[i]]))[0]).should.be.equal(true);
         }
