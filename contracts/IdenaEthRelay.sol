@@ -4,6 +4,7 @@ import "./BytesLib.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/cryptography/ECDSA.sol";
 
+
 contract IdenaEthRelay {
 
     using BytesLib for bytes;
@@ -22,13 +23,18 @@ contract IdenaEthRelay {
 
     constructor (bytes memory _identities) public {
         for (uint256 i = 0; i < _identities.length; i += 20) {
-            identities[0][address(_identities.toAddress(i))] = IDetails(true, false, 0);
+            identities[0][address(_identities.toAddress(i))] = IDetails(
+                true,
+                false,
+                0
+                );
             identitiesCount[0]++;
         }
     }
 
     function relay(bytes memory _identities, bytes memory signature) public {
-        address signer = keccak256(abi.encodePacked(_identities)).toEthSignedMessageHash().recover(signature);
+        address signer = keccak256(abi.encodePacked(_identities))
+            .toEthSignedMessageHash().recover(signature);
         uint256 e = epoch + 1;
         while (e > 0 && !identities[e][signer].valid) {
             e--;
