@@ -1,11 +1,14 @@
 pragma solidity ^0.6.8;
 
 import "./BytesLib.sol";
+import "@hq20/contracts/contracts/state/StateMachine.sol";
+import "@hq20/contracts/contracts/lists/LinkedList.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/cryptography/ECDSA.sol";
 
 
-contract IdenaEthRelay {
+contract IdenaEthRelay is Ownable, StateMachine {
 
     using BytesLib for bytes;
     using SafeMath for uint256;
@@ -13,20 +16,34 @@ contract IdenaEthRelay {
 
     uint256 epoch;
     mapping(uint256 => bytes32) roots;
+    mapping(uint256 => bytes) states;
     mapping(uint256 => uint256) identitiesCount;
     mapping(uint256 => mapping(address => bool)) public isIdentity;
+    LinkedList internal tempIsIdentity;
+    bytes32 internal tempRoot;
+    bytes internal tempState;
+    uint256 internal tempThreshold;
+    uint256 internal tempValidSigs;
 
-    constructor (bytes memory _state) public {
-        bytes32 root;
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            root := mload(add(_state, 32))
-        }
-        roots[0] = root;
-        for (uint256 i = 32; i < _state.length; i += 20) {
+    constructor (bytes32 _root) public {
+        roots[0] = _root;
+        _createTransition("SETUP", "RELAYED");
+        _createTransition("RELAYED", "RELAYING_STATE");
+        _createTransition("RELAYING_STATE", "RELAYING_SIGS");
+        _createTransition("RELAYING_SIGS", "RELAYED");
+    }
+
+    function initState(bytes memory _state) public onlyOwner {
+        require(currentState == "SETUP", "Cannot initiliaze state now.");
+        for (uint256 i = 0; i < _state.length; i += 20) {
             isIdentity[0][address(_state.toAddress(i))] = true;
             identitiesCount[0]++;
         }
+        states[0].concatStorage(_state);
+    }
+
+    function finishInit() public onlyOwner {
+        _transition("RELAYED");
     }
 
     function relayKillInvitee(
@@ -70,6 +87,14 @@ contract IdenaEthRelay {
             isIdentity[epoch][to],
             "Killed identity is not valid."
         );
+        bytes memory newState;
+        bytes memory currState = states[epoch];
+        for (uint256 i = 0; i < currState.length; i += 20) {
+            if (address(currState.toAddress(i)) != to) {
+                newState = newState.concat(currState.slice(i, 20));
+            }
+        }
+        states[epoch] = newState;
         delete isIdentity[epoch][to];
         identitiesCount[epoch]--;
     }
@@ -110,35 +135,74 @@ contract IdenaEthRelay {
             isIdentity[epoch][signer],
             "Killed identity is not valid."
         );
+        bytes memory newState;
+        bytes memory currState = states[epoch];
+        for (uint256 i = 0; i < currState.length; i += 20) {
+            if (address(currState.toAddress(i)) != signer) {
+                newState = newState.concat(currState.slice(i, 20));
+            }
+        }
+        states[epoch] = newState;
         delete isIdentity[epoch][signer];
         identitiesCount[epoch]--;
     }
 
-    function relayState(bytes memory _state, bytes memory signatures) public {
-        uint256 validSigs = 0;
-        uint256 threshold = (identitiesCount[epoch].mul(2) + 1).div(3);
-        for (uint i = 0; i < signatures.length; i += 65) {
-            address signer = keccak256(abi.encodePacked(_state))
-                .toEthSignedMessageHash()
-                .recover(signatures.slice(i, 65));
+    function initRelay(bytes32 _root) public onlyOwner {
+        require(currentState == "RELAYED", "Cannot initialize relaying now.");
+        tempIsIdentity = new LinkedList();
+        tempRoot = _root;
+        _transition("RELAYING_STATE");
+    }
+
+    function relayState(bytes memory _state) public onlyOwner {
+        require(currentState == "RELAYING_STATE", "Cannot relay state now.");
+        for (uint256 i = 0; i < _state.length; i += 20) {
+            tempIsIdentity.addTail(address(_state.toAddress(i)));
+        }
+        tempState.concatStorage(_state);
+    }
+
+    function finishState() public onlyOwner {
+        require(currentState == "RELAYING_STATE", "Cannot finish state now.");
+        tempThreshold = ((tempIsIdentity.idCounter() - 1).mul(2) + 1).div(3);
+        _transition("RELAYING_SIGS");
+    }
+
+    function relaySignatures(bytes memory _signatures) public onlyOwner {
+        require(
+            currentState == "RELAYING_SIGS",
+            "Cannot relay signatures now."
+        );
+        for (uint i = 0; i < _signatures.length; i += 65) {
+            address signer = keccak256(
+                abi.encodePacked(abi.encodePacked(tempRoot).concat(tempState))
+                ).toEthSignedMessageHash()
+                .recover(_signatures.slice(i, 65));
             if (isIdentity[epoch][signer]) {
-                validSigs++;
+                tempValidSigs++;
             }
         }
+    }
+
+    function finishSignatures() public onlyOwner {
+        require(currentState == "RELAYING_SIGS", "Cannot finish sigs now.");
         require (
-            validSigs >= threshold,
+            tempValidSigs >= tempThreshold,
             "Not enough valid signatures to relay new state."
         );
-        bytes32 root;
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            root := mload(add(_state, 32))
-        }
-        roots[++epoch] = root;
-        for (uint256 i = 32; i < _state.length; i += 20) {
-            isIdentity[epoch][address(_state.toAddress(i))] = true;
+        epoch++;
+        states[epoch] = tempState;
+        roots[epoch] = tempRoot;
+        for (uint256 i = 0; i < tempIsIdentity.idCounter(); i++) {
+            (,,address id) = tempIsIdentity.get(i);
+            isIdentity[epoch][id] = true;
             identitiesCount[epoch]++;
         }
+        delete tempRoot;
+        delete tempState;
+        delete tempThreshold;
+        delete tempValidSigs;
+        _transition("RELAYED");
     }
 
     function verify(

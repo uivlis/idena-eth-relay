@@ -400,6 +400,11 @@
     lodash.camelcase "^4.3.0"
     protobufjs "^6.8.6"
 
+"@hq20/contracts@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@hq20/contracts/-/contracts-0.0.6.tgz#fc0a05884294da8757c4187f8567638982b74b6a"
+  integrity sha512-l94ARK0LfcRY7Y5EiInA+0vdXh8lnkTRAw9unli7UC75DY7aBMJl4OqTT5SMdm/n4N1dVVhCnyCM1W84UAx2Vw==
+
 "@hq20/solidity-parser-antlr@0.4.12-alpha.0":
   version "0.4.12-alpha.0"
   resolved "https://registry.yarnpkg.com/@hq20/solidity-parser-antlr/-/solidity-parser-antlr-0.4.12-alpha.0.tgz#4def513caf8c5e76870ad0cd51d301faf0fb7747"
