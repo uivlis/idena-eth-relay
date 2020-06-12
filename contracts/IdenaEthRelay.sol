@@ -59,6 +59,7 @@ contract IdenaEthRelay is Ownable, StateMachine {
         address killerIdentity,
         bytes32[] memory proof
     ) public {
+        require(currentState == "RELAYED", "Cannot relay kill now.");
         require(
             txType == 10,
             "Transaction type must be 'KillInviteeTx'(0xA)"
@@ -111,6 +112,7 @@ contract IdenaEthRelay is Ownable, StateMachine {
         bytes memory signature,
         address killedIdentity
     ) public {
+        require(currentState == "RELAYED", "Cannot relay kill now.");
         require(
             txType == 3,
             "Transaction type must be 'KillTx'(0x3)"
